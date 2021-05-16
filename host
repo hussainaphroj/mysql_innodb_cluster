@@ -1,0 +1,7 @@
+[mysql]
+node1 ansible_host=192.168.56.51 server_id=1 replication_group_name=CONTROL123 primary="true"
+node2 ansible_host=192.168.56.52 server_id=2 replication_group_name=CONTROL234 primary="false"
+node3 ansible_host=192.168.56.53 server_id=3 replication_group_name=CONTROL345 primary="false"
+[router]
+router1 ansible_host=192.168.56.61 router_primary=true
+router2 ansible_host=192.168.56.62 router_primary=false

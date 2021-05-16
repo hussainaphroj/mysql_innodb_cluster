@@ -1,0 +1,57 @@
+---
+- name: Add IP address of all hosts to all hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '.*{{ item }}$'
+    line: "{{ hostvars[item].ansible_host }} {{item}}"
+    state: present
+  when: hostvars[item].ansible_host is defined
+  with_items: "{{ groups.all }}"
+
+- name: "Install PaceMaker"
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - pacemaker
+    - pcs
+    - resource-agents
+
+- name: "Enable the pcsd Daemon"
+  systemd:
+    name: pcsd
+    state: started
+    enabled: true
+
+- name: "Change password for hacluster"
+  shell: "echo {{ ha_passwd }} | passwd --stdin hacluster"
+
+- name: "Transfer pcs setup file"
+  template:
+    src: setup_pcs.sh.j2
+    dest: "/root/setup_pcs.sh"
+    mode: 0755
+
+- name: run the setup script
+  shell: "sh /root/setup_pcs.sh"
+  when: router_primary
+  
+- name: install the mysql router from a remote repo
+  yum:
+    name: "{{ router_rpm }}"
+    state: present
+
+- name: Bootstrap the router
+  shell: "mysqlrouter --bootstrap icroot:{{ innodb_cluster_admin_password }}@{{ mysql_primary }}:3306 --user=mysqlrouter --directory /usr/local/mysqlrouter --force"
+  args:
+     creates: /usr/local/mysqlrouter/mysqlrouter.conf
+     warn: false
+
+
+- name: add mysql router resource
+  command: pcs resource create mysqlrouter systemd:mysqlrouter clone
+  ignore_errors: yes
+
+- name: set VIP INFINITY rule
+  command: pcs constraint colocation add Router_VIP with mysqlrouter-clone score=INFINITY
+  when: router_primary

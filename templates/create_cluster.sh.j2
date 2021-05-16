@@ -1,0 +1,7 @@
+mysqlsh --uri {{ innodb_cluster_user }}:{{ innodb_cluster_admin_password }}@{{ ansible_host }}:3306 -e "dba.createCluster('{{ innodb_cluster_name }}')"
+#mysqlsh --uri {{ innodb_cluster_user }}:{{ innodb_cluster_admin_password }}@{{ ansible_host }}:3306 -e "cluster=dba.getCluster('{{ innodb_cluster_name }}'); cluster.addInstance('{{ innodb_cluster_user }}@{{ ansible_host }}:3306',{password: '{{ innodb_cluster_admin_password }}'})"; echo 0 >/dev/null
+{% for host in groups['mysql'] %}
+{% if hostvars[host].primary == "false" %}
+mysqlsh --uri {{ innodb_cluster_user }}:{{ innodb_cluster_admin_password }}@{{ ansible_host }}:3306 -e "cluster=dba.getCluster('{{ innodb_cluster_name }}'); cluster.addInstance('{{ innodb_cluster_user }}@{{ hostvars[host].ansible_host }}:3306',{password: '{{ innodb_cluster_admin_password }}', recoveryMethod: 'clone'})"; echo 0 >/dev/null
+{% endif %}
+{% endfor %}

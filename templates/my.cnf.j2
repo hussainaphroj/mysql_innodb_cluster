@@ -1,0 +1,58 @@
+# For advice on how to change settings please see
+# http://dev.mysql.com/doc/refman/8.0/en/server-configuration-defaults.html
+
+[mysqld]
+#
+# Remove leading # and set to the amount of RAM for the most important data
+# cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+# innodb_buffer_pool_size = 128M
+#
+# Remove the leading "# " to disable binary logging
+# Binary logging captures changes between backups and is enabled by
+# default. It's default setting is log_bin=binlog
+# disable_log_bin
+#
+# Remove leading # to set options mainly useful for reporting servers.
+# The server defaults are faster for transactions and fast SELECTs.
+# Adjust sizes as needed, experiment to find the optimal values.
+# join_buffer_size = 128M
+# sort_buffer_size = 2M
+# read_rnd_buffer_size = 2M
+#
+# Remove leading # to revert to previous value for default_authentication_plugin,
+# this will increase compatibility with older clients. For background, see:
+# https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin
+# default-authentication-plugin=mysql_native_password
+
+datadir="{{ mysql_data_dir }}"
+socket="{{ mysql_sock_file }}"
+symbolic-links=0
+log-error="{{ mysql_log_file }}"
+pid-file="{{ mysql_pid_file }}"
+#bind-address=0.0.0.0
+port=3306
+# Replication part
+server_id={{ server_id }}
+gtid_mode=ON
+enforce_gtid_consistency=ON
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+binlog_checksum=NONE
+log_slave_updates=ON
+log_bin=binlog
+binlog_format=ROW
+plugin-load = group_replication.so
+# Group replication part
+transaction_write_set_extraction=XXHASH64
+loose-group_replication_group_name="{{ replication_group_name | to_uuid }}"
+loose-group_replication_start_on_boot = OFF
+loose-group_replication_local_address = {{ ansible_host }}:{{ replication_port }}
+loose-group_replication_ip_whitelist = "{% for host in groups['mysql'] %}{{ hostvars[host].ansible_host }}{% if not loop.last %},{% endif -%} {% endfor %}"
+loose-group_replication_group_seeds= "{% for host in groups['mysql'] %}{{ hostvars[host].ansible_host }}:{{ replication_port }}{% if not loop.last %},{% endif -%} {% endfor %}"
+loose-group_replication_bootstrap_group = OFF
+#report_port = 3306
+#report_host = 192.168.56.51
+binlog_transaction_dependency_tracking = WRITESET
+slave_parallel_type = LOGICAL_CLOCK
+slave_parallel_workers = 4
+slave_preserve_commit_order = ON

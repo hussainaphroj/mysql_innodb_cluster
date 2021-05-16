@@ -1,0 +1,10 @@
+PWD=`pwd`
+pcs cluster auth {% for item in groups['router'] %}{{ item }} {% endfor %}-u hacluster -p {{ ha_passwd }} --force > $PWD/pcs.log
+pcs cluster setup --force --name routercluster  --wait_for_all=0 {% for item in groups['router'] %}{{ item }} {% endfor %} > $PWD/pcs.log
+pcs cluster start --all > $PWD/pcs.log
+sleep 60
+pcs property set stonith-enabled=false
+pcs property set no-quorum-policy=ignore
+pcs resource defaults migration-threshold=1
+pcs resource create Router_VIP ocf:heartbeat:IPaddr2 ip={{ vip_ip }} cidr_netmask=24 op monitor interval=5s
+

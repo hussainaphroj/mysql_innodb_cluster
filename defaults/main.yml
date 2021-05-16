@@ -1,0 +1,32 @@
+---
+repo:
+  mysql_community: http://repo.mysql.com/yum/mysql-8.0-community/el/7/$basearch/
+  mysql_tools: http://repo.mysql.com/yum/mysql-tools-community/el/7/$basearch/
+  mysql_connectors: http://repo.mysql.com/yum/mysql-connectors-community/el/7/$basearch/
+mysql_packages:
+  - mysql-community-server
+  - mysql-shell
+  - mysql-router
+mysql_ansible_packages: # required for Ansible to execute remote mysql_user commands
+  - MySQL-python
+  - libselinux-python
+  - policycoreutils-python
+  - rsync
+mysql_data_dir: /data/mysql
+
+mysql_root_password: 'myPaW13d90y.'
+innodb_cluster_admin_password: 'vhmnB82N7x34'
+innodb_cluster_name: innodbcluster
+innodb_cluster_user:  icroot
+mysql_icroot_priv: '*.*:ALL,GRANT'
+cluster_port: 3306
+replication_port: 33061
+mysql_sock_file: /var/lib/mysql/mysql.sock
+mysql_pid_file: /var/run/mysqld/mysqld.pid
+mysql_log_file: /var/log/mysqld.log
+mysql_sql_modes: ANSI
+# mysql router variables
+ha_passwd: MyStrongPassw0rd
+vip_ip: 192.168.56.63
+router_rpm: https://dev.mysql.com/get/Downloads/MySQL-Router/mysql-router-community-8.0.23-1.el7.x86_64.rpm
+mysql_primary: 'node1'

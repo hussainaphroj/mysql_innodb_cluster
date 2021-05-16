@@ -1,0 +1,2 @@
+mysqlsh -e 'print(dba.checkInstanceConfiguration("root@{{ ansible_host }}:3306",{password:"{{ mysql_root_password }}"}))'
+mysqlsh -e 'print(dba.configureLocalInstance("root@{{ ansible_host }}:3306", {mycnfPath: "/etc/my.cnf", clusterAdmin: "{{ innodb_cluster_user }}", clusterAdminPassword: "{{ innodb_cluster_admin_password }}", password: "{{ mysql_root_password }}", interactive: false, restart: true}))'

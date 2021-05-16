@@ -1,0 +1,196 @@
+#####  NOTICE CONFIGURATION MANAGEMENT SYSTEM IN USE  #####
+##      This configuration file was dynamically created  ##
+##      using Ansible. Any changes are subject to being  ##
+##      reversed by the configuration management system  ##
+###########################################################
+# Configuration File Reference Information
+# http://dev.mysql.com/doc/refman/5.7/en/server-configuration-defaults.html
+#
+####################################################
+#
+## Instance 0
+#
+####################################################
+#
+[mysqld]
+datadir="{{ mysql_data_dir }}"
+socket="{{ mysql_sock_file }}"
+
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+log-error="{{ mysql_log_file }}"
+pid-file="{{ mysql_pid_file }}"
+
+open_files_limit = 1024000
+innodb_buffer_pool_size = 25G
+innodb_change_buffering=all
+max_connections = 2000
+
+### Not setting this for now 
+### Setting MySQL mode
+###sql-mode="{{ mysql_sql_modes }}"
+###########
+
+# Requirements for Replication Framework
+server_id={{ ansible_default_ipv4.address | replace(".","") }}0
+gtid_mode=ON
+enforce_gtid_consistency=ON
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+binlog_checksum=NONE
+log_slave_updates=ON
+log_bin=binlog
+binlog_format=ROW
+validate_password_policy = 0
+transaction_write_set_extraction=XXHASH64
+
+# Group Replication Settings
+loose-group_replication_bootstrap_group=off
+loose-group_replication_start_on_boot=off
+loose-group_replication_ssl_mode = REQUIRED
+loose-group_replication_recovery_use_ssl = 1
+
+## Shared replication group configuration
+loose-group_replication_group_name={{ replication_group_name | to_uuid }}
+loose-group_replication_ip_whitelist = "{% for host in groups['mysql'] %}{{ hostvars[host]['ansible_default_ipv4']['address']}}{% if not loop.last %},{% endif %} {% endfor %}"
+loose-group_replication_group_seeds="{% for host in groups['mysql'] %}{{ hostvars[host]['ansible_default_ipv4']['address']}}:{{ replication_port }}{% if not loop.last %},{% endif %} {% endfor %}"
+
+## # Single or Multi-primary mode? Uncomment these two lines
+## # for multi-primary mode, where any host can accept writes
+#loose-group_replication_single_primary_mode = OFF
+#loose-group_replication_enforce_update_everywhere_checks = ON
+##
+## # Host specific replication configuration
+bind-address = "{{ ansible_default_ipv4.address }}"
+report_host = "{{ ansible_default_ipv4.address }}"
+loose-group_replication_local_address="{{ ansible_default_ipv4.address }}:{{ replication_port }}"
+#
+{% if inst is defined and inst == '2' %}
+#
+####################################################
+#
+## Instance 1
+#
+####################################################
+#
+[mysqld@1]
+datadir="{{ mysql_data_dir_1 }}"
+socket="{{ mysql_sock_file_1 }}"
+
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+log-error="{{ mysql_log_file_1 }}"
+pid-file="{{ mysql_pid_file_1 }}"
+
+open_files_limit = 1024000
+innodb_buffer_pool_size = 25G
+innodb_change_buffering=all
+max_connections = 2000
+
+### Not setting this for now 
+### Setting MySQL mode
+###sql-mode="{{ mysql_sql_modes }}"
+###########
+
+# Requirements for Replication Framework
+server_id={{ ansible_default_ipv4.address | replace(".","") }}1
+gtid_mode=ON
+enforce_gtid_consistency=ON
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+binlog_checksum=NONE
+log_slave_updates=ON
+log_bin=binlog
+binlog_format=ROW
+validate_password_policy = 0
+transaction_write_set_extraction=XXHASH64
+
+# Group Replication Settings
+loose-group_replication_bootstrap_group=off
+loose-group_replication_start_on_boot=off
+loose-group_replication_ssl_mode = REQUIRED
+loose-group_replication_recovery_use_ssl = 1
+
+## Shared replication group configuration
+loose-group_replication_group_name={{ replication_group_name_1 | to_uuid }}
+loose-group_replication_ip_whitelist = "{% for host in groups['mysql'] %}{{ hostvars[host]['ansible_default_ipv4']['address']}}{% if not loop.last %},{% endif %} {% endfor %}"
+loose-group_replication_group_seeds="{% for host in groups['mysql'] %}{{ hostvars[host]['ansible_default_ipv4']['address']}}:{{ replication_port }}{% if not loop.last %},{% endif %} {% endfor %}"
+
+## # Single or Multi-primary mode? Uncomment these two lines
+## # for multi-primary mode, where any host can accept writes
+#loose-group_replication_single_primary_mode = OFF
+#loose-group_replication_enforce_update_everywhere_checks = ON
+##
+## # Host specific replication configuration
+bind-address = "{{ ansible_default_ipv4.address }}"
+report_host = "{{ ansible_default_ipv4.address }}"
+loose-group_replication_local_address="{{ ansible_default_ipv4.address }}:{{ replication_port }}"
+{% endif %}
+#
+{% if inst is defined and inst == '3' %}
+#
+####################################################
+#
+## Instance 2
+#
+####################################################
+#
+
+[mysqld@2]
+datadir="{{ mysql_data_dir_2 }}"
+socket="{{ mysql_sock_file_2 }}"
+
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+log-error="{{ mysql_log_file_2 }}"
+pid-file="{{ mysql_pid_file_2 }}"
+
+open_files_limit = 1024000
+innodb_buffer_pool_size = 25G
+innodb_change_buffering=all
+max_connections = 2000
+
+### Not setting this for now 
+### Setting MySQL mode
+###sql-mode="{{ mysql_sql_modes }}"
+###########
+
+# Requirements for Replication Framework
+server_id="{{ ansible_default_ipv4.address | replace(".","") }}2"
+gtid_mode=ON
+enforce_gtid_consistency=ON
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+binlog_checksum=NONE
+log_slave_updates=ON
+log_bin=binlog
+binlog_format=ROW
+validate_password_policy = 0
+transaction_write_set_extraction=XXHASH64
+
+# Group Replication Settings
+loose-group_replication_bootstrap_group=off
+loose-group_replication_start_on_boot=off
+loose-group_replication_ssl_mode = REQUIRED
+loose-group_replication_recovery_use_ssl = 1
+
+## Shared replication group configuration
+loose-group_replication_group_name={{ replication_group_name_2 | to_uuid }}
+loose-group_replication_ip_whitelist = "{% for host in groups['mysql'] %}{{ hostvars[host]['ansible_default_ipv4']['address']}}{% if not loop.last %},{% endif %} {% endfor %}"
+loose-group_replication_group_seeds="{% for host in groups['mysql'] %}{{ hostvars[host]['ansible_default_ipv4']['address']}}:{{ replication_port }}{% if not loop.last %},{% endif %} {% endfor %}"
+
+## # Single or Multi-primary mode? Uncomment these two lines
+## # for multi-primary mode, where any host can accept writes
+#loose-group_replication_single_primary_mode = OFF
+#loose-group_replication_enforce_update_everywhere_checks = ON
+##
+## # Host specific replication configuration
+bind-address = "{{ ansible_default_ipv4.address }}"
+report_host = "{{ ansible_default_ipv4.address }}"
+loose-group_replication_local_address="{{ ansible_default_ipv4.address }}:{{ replication_port }}"
+#
+#
+{% endif %}

@@ -1,0 +1,138 @@
+---
+- name: Add IP address of all hosts to all hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '.*{{ item }}$'
+    line: "{{ hostvars[item].ansible_host }} {{item}}"
+    state: present
+  when: hostvars[item].ansible_host is defined
+  with_items: "{{ groups.all }}"
+
+- name: "Enable MySQL Repository"
+  yum_repository:
+    name: mysql-community
+    description: "MySQL Community Repository"
+    baseurl: "{{ repo.mysql_community }}"
+    enabled: yes
+    gpgcheck: no
+
+- name: "Enable MySQL tools Repository"
+  yum_repository:
+    name: mysql-tools
+    description: "MySQL Tools Repository"
+    baseurl: "{{ repo.mysql_tools }}"
+    enabled: yes
+    gpgcheck: no
+
+- name: "Enable MySQL connectors Repository"
+  yum_repository:
+    name: mysql-connectors
+    description: "MySQL Tools Repository"
+    baseurl: "{{ repo.mysql_connectors }}"
+    enabled: yes
+    gpgcheck: no
+
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: "Install MySQL Packages"
+  yum:
+    name: "{{ mysql_packages }}"
+    state: present
+  register: package_installation
+
+- name: "Install MySQL Ansible Packages"
+  yum:
+    name: "{{ mysql_ansible_packages }}"
+    state: present
+
+- name: "Ensure MySQL data directory exists"
+  file:
+    path: "{{ mysql_data_dir }}"
+    state: directory
+    owner: mysql
+    group: mysql
+
+- name: "Transfer Authentication File"
+  template:
+    src: client.my.cnf.j2
+    dest: /root/.my.cnf
+    owner: "{{ ansible_user_id }}"
+    mode: 0600
+
+- name: "Transfer baseline my.cnf configuration file"
+  template:
+    src: my.cnf.j2
+    dest: /etc/my.cnf
+    owner: root
+    mode: 0644
+
+- name: "Transfer Grant File"
+  template:
+    src: grant.sh.j2
+    dest: "/root/grant.sh"
+    mode: 0755
+
+- name: "Transfer cluster conf File"
+  template:
+    src: conf_cluster.sh.j2
+    dest: "/root/conf_cluster.sh"
+    mode: 0755
+
+- name: "Transfer create cluster File"
+  template:
+    src: create_cluster.sh.j2
+    dest: "/root/create_cluster.sh"
+    mode: 0755
+  when: primary
+
+- name: "Enable the MySQL Daemon"
+  systemd:
+    name: mysqld
+    state: started
+    enabled: true
+
+
+- name: "Disable the Firewalld Daemon"
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: false
+
+- name: "Set MySQL root password"
+  script: "reset_password.sh '{{ mysql_root_password }}'"
+
+- name: "Grant root login for all the hosts"
+  shell: "sh /root/grant.sh"
+
+- name: "Create admin mysql user for customer"
+  mysql_user:
+    name: "{{ admin_user.name }}"
+    password: "{{ admin_user.password }}"
+    priv: "{{ admin_user.priv }}"
+    host: "{{ admin_user.host }}"
+    login_user: root
+    login_user: "{{ mysql_root_password }}"
+    state: present
+
+- name: "configure cluster"
+  shell: "sh /root/conf_cluster.sh"
+
+- name: sleep for 3 Mins and continue with play
+  wait_for: timeout=180
+  when: primary
+
+- name: "create cluster"
+  shell: "sh /root/create_cluster.sh"
+  when: primary
+
+- name: cleanup the files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /root/grant.sh
+    - /root/conf_cluster.sh
+    - /root/create_cluster.sh

@@ -1,0 +1,14 @@
+---
+- hosts: mysql
+  tasks:
+    - name: Running task from Mysql InnoDB
+      include_role:
+        name: mysql_innodb_cluster 
+        tasks_from: mysql_innodb
+
+#- hosts: router
+#  tasks:
+#    - name: Running task from Mysql InnoDB
+#      include_role:
+#        name: mysql_innodb_cluster
+#        tasks_from: mysql_router
