@@ -38,4 +38,6 @@ router2 ansible_host=192.168.56.62 router_primary=false
 ```
 ansible-playbook -i host mysql_cluster.yml -u <username> --ask-pass -b  
 ```
-Go and grab a cup of coffee while your cluserter is getting setup.
+Go and grab a cup of coffee while your cluserter is getting setup!
+
+Happy Learing :)!!!
